@@ -6,7 +6,7 @@ Here are some examples of non-functional requirements for the event registration
 
 .Speed
 ====
-. When a user creates a valid event, the event registration application shall save the event and provide confirmation in more more than 2 seconds, 95% of the time.
+. When a user creates a valid event, the event registration application shall save the event and provide confirmation in no more than 2 seconds, 95% of the time.
 ====
 
 .Memory consumption
