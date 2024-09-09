@@ -13,7 +13,7 @@ This tutorial serves to give you the practical knowledge required to execute the
 The tutorial will use a simple event registration app as a running example.
 The event registration app allows users to sign up and register for events using their name.
 
-// include::01-Requirements.adoc[]
+include::01-Requirements.adoc[]
 
 // include::02-PMT-TC.adoc[]
 
