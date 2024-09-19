@@ -1022,6 +1022,20 @@ The status of issues can only be changed after they are created.
 <div class="paragraph">
 <p>Download the latest version of PostgreSQL from <a href="https://www.enterprisedb.com/downloads/postgres-postgresql-downloads" class="bare">https://www.enterprisedb.com/downloads/postgres-postgresql-downloads</a>. Once the download is complete, run the installer. You can stick with the default values for most screens.</p>
 </div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Important</div>
+</td>
+<td class="content">
+For your project, each team member will need to set up their own database on their own machine.
+<strong>You should coordinate with your team members and choose the same port number and password.</strong>
+This will make it easier to configure your app to connect to the database.
+</td>
+</tr>
+</table>
+</div>
 <div class="paragraph">
 <p>The default installation directory should be fine.</p>
 </div>
@@ -1055,7 +1069,11 @@ The status of issues can only be changed after they are created.
 </div>
 </div>
 <div class="paragraph">
-<p>The default port number should be fine. However, there&#8217;s no problem using a different port number in case a different app is using 5432 for some reason. Just remember your choice so that you know which port your app should connect to. Here is a <a href="https://en.wikipedia.org/wiki/List_of_TCP_and_UDP_port_numbers">list of typical TCP/UDP ports</a> and their reservation status. <strong>Do not use a port that is reserved.</strong></p>
+<p>The default port number should be fine.
+However, there&#8217;s no problem using a different port number in case a different app is using 5432 for some reason.
+Just remember your choice so that you know which port your app should connect to.
+Here is a <a href="https://en.wikipedia.org/wiki/List_of_TCP_and_UDP_port_numbers">list of typical TCP/UDP ports</a> and their reservation status.
+<strong>Do not use a port that is reserved.</strong></p>
 </div>
 <div class="imageblock">
 <div class="content">
@@ -1153,7 +1171,7 @@ In <code>psql</code>, create a new database for the event registration app using
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2024-09-19 08:48:35 -0400
+Last updated 2024-09-19 09:01:30 -0400
 </div>
 </div>
 </body>
