@@ -1354,10 +1354,10 @@ It is also standard practice in domain modeling to include a root class that inc
 <p>Bidirectional associations mean duplicate data in the database; every time someone registers for an event, we would need to add the event to their list of events <strong>and</strong> add the person to the list of registrants for the event. This is problematic both because (1) it wastes storage space and (2) the data may become inconsistent (what happens if Alice has a certain event in her list of events but Alice is not in the list of registrants for that event?). <strong>Solution:</strong> make all associations unidirectional.</p>
 </li>
 <li>
-<p>Many-to-many associations require an extra table in the database. Explicitly representing this as a class in the domain model will make our lives easier. <strong>Solution:</strong> Add a class called "Registration" between User and Event.</p>
+<p>Many-to-many associations require an extra table in the database. Explicitly representing this as a class in the domain model will make our lives easier. <strong>Solution:</strong> add a class called "Registration" between User and Event.</p>
 </li>
 <li>
-<p>In the database, each table needs a primary key column. <strong>Solution:</strong> In this example, we could theoretically use the email address as a primary key for users and a combination of attributes (e.g., name, date, start time) as the primary key for events. However, it is usually best to simply add an integer ID to be a primary key. Using a single integer is usually simpler than using a combination of attributes and it saves space compared to using a string like an email address or username. Using a meaningful attribute like an email address, name, date, or start time in a primary key also makes it very difficult to change that attribute after the object is created, whereas an integer ID never needs to be changed.</p>
+<p>In the database, each table needs a primary key column. <strong>Solution:</strong> in this example, we could theoretically use the email address as a primary key for users and a combination of attributes (e.g., name, date, start time) as the primary key for events. However, it is usually best to simply add an integer ID to be a primary key. Using a single integer is usually simpler than using a combination of attributes and it saves space compared to using a string like an email address or username. Using a meaningful attribute like an email address, name, date, or start time in a primary key also makes it very difficult to change that attribute after the object is created, whereas an integer ID never needs to be changed.</p>
 </li>
 <li>
 <p>"User" is a reserved keyword in PostgreSQL (<a href="https://www.postgresql.org/docs/current/sql-keywords-appendix.html" class="bare">https://www.postgresql.org/docs/current/sql-keywords-appendix.html</a>). If we call a database table "User," we will run into syntax errors. <strong>Solution:</strong> rename the class (to "Person," "Customer," etc.).</p>
@@ -1468,19 +1468,22 @@ These are the essential attributes:</p>
 <div class="ulist">
 <ul>
 <li>
-<p><code>@Entity</code>: Placed before the class declaration to mark a class as an "entity," which may have a corresponding table in the database.</p>
+<p><code>@Entity</code>: Placed before the class declaration to mark a class as an "entity," which may have a corresponding table in the database. Hibernate has a few requirements for entity classes (e.g., it must have a public, protected, or package-private no-args constructor). <a href="https://docs.jboss.org/hibernate/orm/6.5/userguide/html_single/Hibernate_User_Guide.html#entity-pojo">Read the docs for more details</a>.</p>
 </li>
 <li>
-<p><code>@Inheritance(strategy=STRATEGY)</code>: Used to specify the inheritance strategy for a class hierarchy, where the superclass is annotated with the <code>@Entity</code> tag. <a href="https://docs.jboss.org/hibernate/orm/6.5/userguide/html_single/Hibernate_User_Guide.html#entity-inheritance" class="bare">https://docs.jboss.org/hibernate/orm/6.5/userguide/html_single/Hibernate_User_Guide.html#entity-inheritance</a>.</p>
+<p><code>@Inheritance(strategy=STRATEGY)</code>: Used to specify the inheritance strategy for a class hierarchy, where the superclass is annotated with the <code>@Entity</code> tag. <a href="https://docs.jboss.org/hibernate/orm/6.5/userguide/html_single/Hibernate_User_Guide.html#entity-inheritance">Read the docs for more details</a>.</p>
 </li>
 <li>
-<p><code>@Id</code>: Placed before the attribute declaration that will serve as the primary unique identifier for the class in the corresponding database table. <a href="https://docs.jboss.org/hibernate/orm/6.5/userguide/html_single/Hibernate_User_Guide.html#identifiers-simple" class="bare">https://docs.jboss.org/hibernate/orm/6.5/userguide/html_single/Hibernate_User_Guide.html#identifiers-simple</a>.</p>
+<p><code>@Id</code>: Placed before the attribute declaration that will serve as the primary unique identifier for the class in the corresponding database table. <a href="https://docs.jboss.org/hibernate/orm/6.5/userguide/html_single/Hibernate_User_Guide.html#identifiers-simple">Read the docs for more details</a>.</p>
 </li>
 <li>
-<p><code>@GeneratedValue(strategy=STRATEGY)</code>: Placed between the <em>@Id</em> tag and the attribute declaration, indicating the attribute is to be generated automatically. <a href="https://docs.jboss.org/hibernate/orm/6.5/userguide/html_single/Hibernate_User_Guide.html#identifiers-generators" class="bare">https://docs.jboss.org/hibernate/orm/6.5/userguide/html_single/Hibernate_User_Guide.html#identifiers-generators</a>.</p>
+<p><code>@EmbeddedId</code>, <code>@Embedded</code>: Used to define a composite primary key. <a href="https://docs.jboss.org/hibernate/orm/6.5/userguide/html_single/Hibernate_User_Guide.html#identifiers-composite">Read the docs for more details</a>.</p>
 </li>
 <li>
-<p><code>OneToOne</code>, <code>@ManyToOne</code>, etc.: Placed before the attribute declaration to specify the multiplicity in associative relationship between the current class and reference class. The first word is the multiplicity of the current class, with the other representing the multiplicity of the other class. <a href="https://docs.jboss.org/hibernate/orm/6.5/userguide/html_single/Hibernate_User_Guide.html#associations" class="bare">https://docs.jboss.org/hibernate/orm/6.5/userguide/html_single/Hibernate_User_Guide.html#associations</a>.</p>
+<p><code>@GeneratedValue(strategy=STRATEGY)</code>: Placed between the <em>@Id</em> tag and the attribute declaration, indicating the attribute is to be generated automatically. <a href="https://docs.jboss.org/hibernate/orm/6.5/userguide/html_single/Hibernate_User_Guide.html#identifiers-generators">Read the docs for more details</a>.</p>
+</li>
+<li>
+<p><code>@OneToOne</code>, <code>@ManyToOne</code>, etc.: Placed before the attribute declaration to specify the multiplicity in associative relationship between the current class and reference class. The first word is the multiplicity of the current class, with the other representing the multiplicity of the other class. <a href="https://docs.jboss.org/hibernate/orm/6.5/userguide/html_single/Hibernate_User_Guide.html#associations">Read the docs for more details</a>.</p>
 </li>
 </ul>
 </div>
@@ -1526,7 +1529,7 @@ import org.springframework.data.repository.CrudRepository;
 
 import ca.mcgill.ecse321.eventregistration.model.Person;
 
-public interface PersonRepository extends CrudRepository&lt;Person, String&gt;{
+public interface PersonRepository extends CrudRepository&lt;Person, Integer&gt;{
 
 	Person findPersonById(int id);
 
@@ -1537,26 +1540,10 @@ public interface PersonRepository extends CrudRepository&lt;Person, String&gt;{
 <li>
 <p>Since Spring supports automated JPA Query creation from method names (see <a href="https://docs.spring.io/spring-data/jpa/docs/current/reference/html/#jpa.query-methods.query-creation">possible language constructs here</a>) <strong>we don&#8217;t need to implement the interface manually</strong>, Spring JPA will create the corresponding queries runtime! This way we don&#8217;t need to write SQL queries either.</p>
 </li>
-<li>
-<p>Create interfaces for the <code>Event</code> and <code>Registration</code> classes as well. For example, the interface for <code>Event</code> is shown below.<br>
-<em>EventRepository.java</em>:</p>
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">package ca.mcgill.ecse321.eventregistration.repository;
-
-import org.springframework.data.repository.CrudRepository;
-
-import ca.mcgill.ecse321.eventregistration.model.Event;
-
-public interface EventRepository extends CrudRepository&lt;Event, String&gt; {
-
-	Event findEventById(int id);
-
-}</code></pre>
-</div>
-</div>
-</li>
 </ol>
+</div>
+<div class="paragraph">
+<p>Create interfaces for the <code>Event</code> and <code>Registration</code> classes as well.</p>
 </div>
 </div>
 </div>
@@ -1655,7 +1642,11 @@ public class PersonRepositoryTests {
 </div>
 </div>
 <div class="paragraph">
-<p>Re-run the tests and you should see much longer stack traces with helpful hints. Focus on the "Caused by:" parts.</p>
+<p>Re-run the tests and you should see much longer stack traces with helpful hints.
+Alternatively, you can check the test report for the full stack traces.
+There should be a link to the report in the output of <code>gradlew</code>.
+In either case, focus on the "Caused by:" parts.
+The error messages go from high-level to low-level, so if you find the messages at the beginning too vague then you might be better off reading the stack trace bottom-up.</p>
 </div>
 <div class="paragraph">
 <p>If <em>all</em> the tests are failing (including <code>contextLoads()</code>), it means your project failed to start. This is generally because it failed to connect to the database or there is an issue with your model.</p>
@@ -1686,7 +1677,7 @@ public class PersonRepositoryTests {
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2024-09-24 12:19:36 -0400
+Last updated 2024-09-26 12:04:21 -0400
 </div>
 </div>
 </body>
