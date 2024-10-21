@@ -6,14 +6,14 @@ include::03-2-Spring-Setup.adoc[]
 
 include::03-3-DomainModelling.adoc[]
 
-include::03-5-Spring-CRUD.adoc[]
+include::03-4-Spring-CRUD.adoc[]
 
-include::03-6-Persistence-Testing.adoc[]
+include::03-5-Persistence-Testing.adoc[]
 
-// include::03-7-Backend-Test-Coverage.adoc[]
+include::03-6-Spring-RESTful-Services.adoc[]
 
-// include::03-8-Spring-RESTful-Services.adoc[]
+include::03-7-Backend-Service-Testing.adoc[]
 
-// include::03-9-Backend-Service-Testing.adoc[]
+include::03-8-Backend-Test-Coverage.adoc[]
 
-// include::03-10-API-Docs.adoc[]
+include::03-9-API-Docs.adoc[]

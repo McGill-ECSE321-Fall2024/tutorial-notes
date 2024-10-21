@@ -32,7 +32,7 @@ tasks.named('jacocoTestReport') {
 
 . This new plugin gives us the `jacocoTestReport` task that can generate html reports. Try executing this task from the terminal and see the generated HTML files under _build/reports/jacoco/test/html/_!
 
-. If you wish, you can check enforce a certain threshold on the test cases with this Jacoco plugin. With the definition below, the `./gradlew jacocoTestCoverageVerification` task will fail if code coverage is below 60%. A good coverage to aspire to is 75% or greater. 100 % code coverage is nearly impossible to achieve. 
+. If you wish, you can check enforce a certain threshold on the test cases with this Jacoco plugin. With the definition below, the `./gradlew jacocoTestCoverageVerification` task will fail if code coverage is below 60%. A good coverage to aspire to is 75% or greater. Achieving 100 % coverage is often impractical.
 ```gradle
 
 tasks.named('test') {
