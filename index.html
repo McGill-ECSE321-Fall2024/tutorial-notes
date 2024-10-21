@@ -1698,168 +1698,81 @@ The error messages go from high-level to low-level, so if you find the messages 
 <div class="sect3">
 <h4 id="_implementing_service_methods">3.6.1. Implementing Service Methods</h4>
 <div class="paragraph">
-<p>We implement use-cases in <em>service classes</em> by using the DAOs for each data type of the domain model.</p>
+<p>We implement use-cases in <em>service classes</em> by using the CRUD repositories for each data type of the domain model.
+In <em>src/main/java</em>, create a new package <code>ca.mcgill.ecse321.eventregistration.service</code>.
+As an example, some simple person-related methods can be implemented as follows:</p>
 </div>
-<div class="olist arabic">
-<ol class="arabic">
-<li>
-<p>In <em>src/main/java</em>, create a new package <code>ca.mcgill.ecse321.eventregistration.service</code>.</p>
-</li>
-<li>
-<p>In this package, create the <code>EventRegistrationService</code> class as shown below</p>
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-java" data-lang="java">package ca.mcgill.ecse321.eventregistration.service;
 
 import java.sql.Date;
-import java.sql.Time;
-import java.util.ArrayList;
-import java.util.List;
+import java.time.LocalDate;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
-import ca.mcgill.ecse321.eventregistration.repository.EventRepository;
-import ca.mcgill.ecse321.eventregistration.repository.PersonRepository;
-import ca.mcgill.ecse321.eventregistration.repository.RegistrationRepository;
-import ca.mcgill.ecse321.eventregistration.model.Event;
 import ca.mcgill.ecse321.eventregistration.model.Person;
-import ca.mcgill.ecse321.eventregistration.model.Registration;
+import ca.mcgill.ecse321.eventregistration.repository.PersonRepository;
+import jakarta.transaction.Transactional;
 
 @Service
-public class EventRegistrationService {
+public class PersonService {
+    @Autowired
+    private PersonRepository personRepo;
 
-	@Autowired
-	EventRepository eventRepository;
-	@Autowired
-	PersonRepository personRepository;
-	@Autowired
-	RegistrationRepository registrationRepository;
+    public Person findPersonById(int pid) {
+        Person p = personRepo.findPersonById(pid);
+        if (p == null) {
+            throw new IllegalArgumentException("There is no person with ID " + pid + ".");
+        }
+        return p;
+    }
 
-	@Transactional
-	public Person createPerson(String name) {
-		Person person = new Person();
-		person.setName(name);
-		personRepository.save(person);
-		return person;
-	}
+    @Transactional
+    public Person createPerson(String name, String email, String password) {
+        if (password == null || password.length() &lt; 8) {
+            throw new IllegalArgumentException("Password too short.");
+        }
 
-	@Transactional
-	public Person getPerson(String name) {
-		Person person = personRepository.findPersonByName(name);
-		return person;
-	}
-
-	@Transactional
-	public List&lt;Person&gt; getAllPersons() {
-		return toList(personRepository.findAll());
-	}
-
-	@Transactional
-	public Event createEvent(String name, Date date, Time startTime, Time endTime) {
-		Event event = new Event();
-		event.setName(name);
-		event.setDate(date);
-		event.setStartTime(startTime);
-		event.setEndTime(endTime);
-		eventRepository.save(event);
-		return event;
-	}
-
-	@Transactional
-	public Event getEvent(String name) {
-		Event event = eventRepository.findEventByName(name);
-		return event;
-	}
-
-	@Transactional
-	public List&lt;Event&gt; getAllEvents() {
-		return toList(eventRepository.findAll());
-	}
-
-	@Transactional
-	public Registration register(Person person, Event event) {
-		Registration registration = new Registration();
-		registration.setId(person.getName().hashCode() * event.getName().hashCode());
-		registration.setPerson(person);
-		registration.setEvent(event);
-
-		registrationRepository.save(registration);
-
-		return registration;
-	}
-
-	@Transactional
-	public List&lt;Registration&gt; getAllRegistrations(){
-		return toList(registrationRepository.findAll());
-	}
-
-	@Transactional
-	public List&lt;Event&gt; getEventsAttendedByPerson(Person person) {
-		List&lt;Event&gt; eventsAttendedByPerson = new ArrayList&lt;&gt;();
-		for (Registration r : registrationRepository.findByPerson(person)) {
-			eventsAttendedByPerson.add(r.getEvent());
-		}
-		return eventsAttendedByPerson;
-	}
-
-	private &lt;T&gt; List&lt;T&gt; toList(Iterable&lt;T&gt; iterable){
-		List&lt;T&gt; resultList = new ArrayList&lt;T&gt;();
-		for (T t : iterable) {
-			resultList.add(t);
-		}
-		return resultList;
-	}
-
+        Date now = Date.valueOf(LocalDate.now());
+        Person personToCreate = new Person(name, email, password, now);
+        return personRepo.save(personToCreate);
+    }
 }</code></pre>
 </div>
 </div>
-</li>
-</ol>
+<div class="paragraph">
+<p>The <code>@Transactional</code> annotations means that the annotated method will be run in a <a href="https://en.wikipedia.org/wiki/Database_transaction#Purpose">transactional way</a>.
+Spring Boot automatically begins a transaction when a method marked <code>@Transactional</code> is called.
+If that method throws an exception, the framework will "roll back" the transaction so that, if the method has already made some changes in the database, those changes do not take effect.
+In this example it is perhaps unnecessary because we only perform one insertion, but in methods that perform multiple database operations it is important to use transactions to avoid data corruption.
+See the Spring Boot documentation on <a href="https://docs.spring.io/spring-framework/reference/data-access/transaction/declarative/annotations.html">the <code>@Transactional</code> annotation</a> and <a href="https://docs.spring.io/spring-framework/reference/data-access/transaction.html">transaction management</a> for more details.</p>
 </div>
 </div>
 <div class="sect3">
 <h4 id="_exposing_service_functionality_via_a_restful_api">3.6.2. Exposing Service Functionality via a RESTful API</h4>
 <div class="sect4">
 <h5 id="_building_a_restful_web_service_using_a_controller_and_data_transfer_objects">Building a RESTful Web Service Using a Controller and Data Transfer Objects</h5>
-<div class="olist arabic">
-<ol class="arabic">
+<div class="paragraph">
+<p>To handle receiving HTTP requests and sending responses, we create a separate <em>controller layer</em>.
+We put this in a new package called <code>ca.mcgill.ecse321.eventregistration.controller</code>.</p>
+</div>
+<div class="paragraph">
+<p>We also want to define <em>data transfer objects</em> (DTOs) to precisely represent the bodies of the HTTP requests and responses our API accepts.
+Simply using the model classes would cause several problems.
+For example:</p>
+</div>
+<div class="ulist">
+<ul>
 <li>
-<p>We first create a new package <code>ca.mcgill.ecse321.eventregistration.controller</code> in EventRegistration-Backend and then create <code>EventRegistrationRestController</code> class inside it. We add the annotation <code>@RestController</code> to the controller class so that HTTP requests can be dispacthed to <code>EventRegistrationRestController</code> class. In addition, we enable <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS">Cross-Origin Resource Sharing</a> using the <code>@CrossOrigin</code> annotation on the REST controller class.</p>
-<div class="admonitionblock note">
-<table>
-<tr>
-<td class="icon">
-<div class="title">Note</div>
-</td>
-<td class="content">
-You can also use wildcards in the <code>@CrossOrigin</code> annotation, as in <code>@CrossOrigin(origin = "<strong>")</code>.
-This allows cross-origin requests from *any</strong> domain, which is less secure but possibly more convenient.
-</td>
-</tr>
-</table>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">package ca.mcgill.ecse321.eventregistration.controller;
-
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.RestController;
-
-@CrossOrigin(origins = "http://localhost:8087")
-@RestController
-public class EventRegistrationRestController {
-
-	@Autowired
-	private EventRegistrationService service;
-
-}</code></pre>
-</div>
-</div>
+<p>Model classes may have unnecessary or even sensitive information (e.g., a person&#8217;s password) that should not normally be included in responses.</p>
 </li>
 <li>
-<p>We further create another package ca.mcgill.ecse321.eventregistration.dto and create the below Data Transfer Object (DTO) classes inside that package. First we create EventDto.java.</p>
+<p>Model classes may have fields that are generated by the server and should not be included in requests (e.g., a person&#8217;s ID or creation date).</p>
+</li>
+</ul>
+</div>
 <div class="admonitionblock important">
 <table>
 <tr>
@@ -1867,288 +1780,175 @@ public class EventRegistrationRestController {
 <div class="title">Important</div>
 </td>
 <td class="content">
-Data Access Object (DAO) != Data Transfer Object (DTO). These two are completely separate concepts, as you will also see below. These two should not be confused with each other.
+DTOs are an entirely different concept from the DAOs (data access objects, a.k.a. CRUD repositories) discussed earlier.
 </td>
 </tr>
 </table>
 </div>
+<div class="paragraph">
+<p>We create yet another package, <code>ca.mcgill.ecse321.eventregistration.controller</code>, to store these DTOs.</p>
+</div>
+<div class="paragraph">
+<p>As an example, we can use the following person DTO in responses.</p>
+</div>
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-java" data-lang="java">package ca.mcgill.ecse321.eventregistration.dto;
 
-import java.sql.Date;
-import java.sql.Time;
+import java.time.LocalDate;
 
-public class EventDto {
+import ca.mcgill.ecse321.eventregistration.model.Person;
 
-	private String name;
-	private Date eventDate;
-	private Time startTime;
-	private Time endTime;
+public class PersonResponseDto {
+    private int id;
+    private String name;
+    private String email;
+    private LocalDate creationDate;
 
-	public EventDto() {
-	}
+    // Jackson needs a default constructor, but it doesn't need to be public
+    @SuppressWarnings("unused")
+    private PersonResponseDto() {
+    }
 
-	public EventDto(String name) {
-		this(name, Date.valueOf("1971-01-01"), Time.valueOf("00:00:00"), Time.valueOf("23:59:59"));
-	}
+    public PersonResponseDto(Person model) {
+        this.id = model.getId();
+        this.name = model.getName();
+        this.email = model.getEmail();
+        this.creationDate = model.getCreationDate().toLocalDate();
+    }
 
-	public EventDto(String name, Date eventDate, Time startTime, Time endTime) {
-		this.name = name;
-		this.eventDate = eventDate;
-		this.startTime = startTime;
-		this.endTime = endTime;
-	}
+    public LocalDate getCreationDate() {
+        return creationDate;
+    }
 
-	public String getName() {
-		return name;
-	}
+    public String getEmail() {
+        return email;
+    }
 
-	public Date getEventDate() {
-		return eventDate;
-	}
+    public int getId() {
+        return id;
+    }
 
-	public Time getStartTime() {
-		return startTime;
-	}
+    public String getName() {
+        return name;
+    }
 
-	public Time getEndTime() {
-		return endTime;
-	}
+    public void setCreationDate(LocalDate creationDate) {
+        this.creationDate = creationDate;
+    }
 
-}</code></pre>
-</div>
-</div>
-</li>
-<li>
-<p>Next, we create <code>PersonDto</code> Java class.</p>
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">package ca.mcgill.ecse321.eventregistration.dto;
+    public void setEmail(String email) {
+        this.email = email;
+    }
 
-import java.util.Collections;
-import java.util.List;
+    public void setId(int id) {
+        this.id = id;
+    }
 
-public class PersonDto {
-
-	private String name;
-	private List&lt;EventDto&gt; events;
-
-	public PersonDto() {
-	}
-
-	@SuppressWarnings("unchecked")
-	public PersonDto(String name) {
-		this(name, Collections.EMPTY_LIST);
-	}
-
-	public PersonDto(String name, List&lt;EventDto&gt; arrayList) {
-		this.name = name;
-		this.events = arrayList;
-	}
-
-	public String getName() {
-		return name;
-	}
-
-	public List&lt;EventDto&gt; getEvents() {
-		return events;
-	}
-
-	public void setEvents(List&lt;EventDto&gt; events) {
-		this.events = events;
-	}
-
-}</code></pre>
-</div>
-</div>
-</li>
-<li>
-<p>Finally, we create <code>RegistrationDto</code> Java class.</p>
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">package ca.mcgill.ecse321.eventregistration.dto;
-
-public class RegistrationDto {
-
-	private PersonDto person;
-	private EventDto event;
-
-	public RegistrationDto() {
-	}
-
-	public RegistrationDto(PersonDto person, EventDto event) {
-		this.person = person;
-		this.event = event;
-	}
-
-	public PersonDto getperson() {
-		return person;
-	}
-
-	public void setperson(PersonDto person) {
-		this.person = person;
-	}
-
-	public EventDto getEvent() {
-		return event;
-	}
-
-	public void setEvent(EventDto event) {
-		this.event = event;
-	}
-}</code></pre>
-</div>
-</div>
-</li>
-<li>
-<p>We start adding the methods in the <code>EventRegistrationRestController</code> class. Also, we will add annotaions to map HTTP requests.</p>
-<div class="admonitionblock tip">
-<table>
-<tr>
-<td class="icon">
-<div class="title">Tip</div>
-</td>
-<td class="content">
-In Spring Tools Suite (a.k.a. Eclipse), you can organize Java imports with kbd:[Ctrl+Shift+o]
-</td>
-</tr>
-</table>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">@GetMapping(value = { "/persons", "/persons/" })
-public List&lt;PersonDto&gt; getAllPersons() {
-	return service.getAllPersons().stream().map(p -&gt; convertToDto(p)).collect(Collectors.toList());
-}
-
-@PostMapping(value = { "/persons/{name}", "/persons/{name}/" })
-public PersonDto createPerson(@PathVariable("name") String name) throws IllegalArgumentException {
-	Person person = service.createPerson(name);
-	return convertToDto(person);
+    public void setName(String name) {
+        this.name = name;
+    }
 }</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>The <code>@RequestMapping</code> annotation is used to map HTTP requests to Spring Controller methods. Since, <code>@RequestMapping</code> maps all HTTP operations by default. We can use <code>@GetMapping</code>, <code>@PostMapping</code> and so forth to narrow this mapping to specific HTTP operations.</p>
+<p>Note that we omit the password in the DTO above.
+The DTO for requests (e.g., when creating a person for the first time) would be similar, but would <strong>not</strong> have the ID or creation date (these should be generated server-side) and it <strong>should</strong> have the password.</p>
 </div>
 <div class="paragraph">
-<p>Moreover, in the above snippet, we use the <code>value</code> parameter of <code>@PathVariable</code> annotation to bind the value of the query string parameter name into the name parameter of the <code>createPerson()</code> method.</p>
+<p>With these DTOs and the <code>PersonService</code> in hand, we can finally define a few HTTP endpoints in our controller layer.</p>
 </div>
-</li>
-<li>
-<p>You can add other methods similarly with appropriate mappings.</p>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-java" data-lang="java">@PostMapping(value = { "/events/{name}", "/events/{name}/" })
-public EventDto createEvent(@PathVariable("name") String name, @RequestParam Date date,
-@RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.TIME, pattern = "HH:mm") LocalTime startTime,
-@RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.TIME, pattern = "HH:mm") LocalTime endTime)
-throws IllegalArgumentException {
-	Event event = service.createEvent(name, date, Time.valueOf(startTime), Time.valueOf(endTime));
-	return convertToDto(event);
-}
+<pre class="highlight"><code class="language-java" data-lang="java">package ca.mcgill.ecse321.eventregistration.controller;
 
-@GetMapping(value = { "/events", "/events/" })
-public List&lt;EventDto&gt; getAllEvents() {
-	List&lt;EventDto&gt; eventDtos = new ArrayList&lt;&gt;();
-	for (Event event : service.getAllEvents()) {
-		eventDtos.add(convertToDto(event));
-	}
-	return eventDtos;
-}
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RestController;
 
-@PostMapping(value = { "/register", "/register/" })
-public RegistrationDto registerPersonForEvent(@RequestParam(name = "person") PersonDto pDto,
-	@RequestParam(name = "event") EventDto eDto) throws IllegalArgumentException {
-	Person p = service.getPerson(pDto.getName());
-	Event e = service.getEvent(eDto.getName());
+import ca.mcgill.ecse321.eventregistration.dto.PersonRequestDto;
+import ca.mcgill.ecse321.eventregistration.dto.PersonResponseDto;
+import ca.mcgill.ecse321.eventregistration.model.Person;
+import ca.mcgill.ecse321.eventregistration.service.PersonService;
 
-	Registration r = service.register(p, e);
-	return convertToDto(r, p, e);
-}
+@RestController
+public class PersonController {
+    @Autowired
+    private PersonService personService;
 
-@GetMapping(value = { "/registrations/person/{name}", "/registrations/person/{name}/" })
-public List&lt;EventDto&gt; getEventsOfPerson(@PathVariable("name") PersonDto pDto) {
-	Person p = convertToDomainObject(pDto);
-	return createEventDtosForPerson(p);
-}
+    /**
+     * Return the person with the given ID.
+     *
+     * @param pid The primary key of the person to find.
+     * @return The person with the given ID.
+     */
+    @GetMapping("/people/{pid}")
+    public PersonResponseDto findPersonById(@PathVariable int pid) {
+        Person person = personService.findPersonById(pid);
+        return new PersonResponseDto(person);
+    }
 
-@GetMapping(value = { "/events/{name}", "/events/{name}/" })
-public EventDto getEventByName(@PathVariable("name") String name) throws IllegalArgumentException {
-	return convertToDto(service.getEvent(name));
-}
-
-private EventDto convertToDto(Event e) {
-	if (e == null) {
-		throw new IllegalArgumentException("There is no such Event!");
-	}
-	EventDto eventDto = new EventDto(e.getName(),e.getDate(),e.getStartTime(),e.getEndTime());
-	return eventDto;
-}
-
-private PersonDto convertToDto(Person p) {
-	if (p == null) {
-		throw new IllegalArgumentException("There is no such Person!");
-	}
-	PersonDto personDto = new PersonDto(p.getName());
-	personDto.setEvents(createEventDtosForPerson(p));
-	return personDto;
-}
-
-private RegistrationDto convertToDto(Registration r, Person p, Event e) {
-	EventDto eDto = convertToDto(e);
-	PersonDto pDto = convertToDto(p);
-	return new RegistrationDto(pDto, eDto);
-}
-
-private Person convertToDomainObject(PersonDto pDto) {
-	List&lt;Person&gt; allPersons = service.getAllPersons();
-	for (Person person : allPersons) {
-		if (person.getName().equals(pDto.getName())) {
-			return person;
-		}
-	}
-	return null;
-}
-
-private List&lt;EventDto&gt; createEventDtosForPerson(Person p) {
-	List&lt;Event&gt; eventsForPerson = service.getEventsAttendedByPerson(p);
-	List&lt;EventDto&gt; events = new ArrayList&lt;&gt;();
-	for (Event event : eventsForPerson) {
-		events.add(convertToDto(event));
-	}
-	return events;
+    /**
+     * Create a new person.
+     *
+     * @param person The person to create.
+     * @return The created person, including their ID.
+     */
+    @PostMapping("/people")
+    public PersonResponseDto createPerson(@RequestBody PersonRequestDto person) {
+        Person createdPerson = personService.createPerson(person.getName(), person.getEmail(), person.getPassword());
+        return new PersonResponseDto(createdPerson);
+    }
 }</code></pre>
 </div>
 </div>
-</li>
-</ol>
+<div class="paragraph">
+<p>The <code>@GetMapping</code> annotation indicates that <code>findPersonById</code> handles requests to the endpoint <code>GET /people/{pid}</code> (where <code>{pid}</code> should be replaced by an integer ID).
+Spring Boot will extract the <code>pid</code> from the URL for us and pass the value to <code>findPersonById</code> via the <code>pid</code> parameter.
+<code>findPersonById</code> simply calls the service-layer method and then converts the response to a DTO.
+Similarly, the <code>@PostMapping</code> annotation indicates that <code>createPerson</code> handles requests to <code>POST /people</code>.
+Since the <code>person</code> parameter is marked <code>@RequestBody</code>, Spring Boot will parse the <em>body</em> of the POST request to a <code>PersonRequestDto</code>.</p>
 </div>
 </div>
 <div class="sect4">
 <h5 id="_trying_smoke_testing_of_the_application">Trying (Smoke Testing of) the Application</h5>
 <div class="paragraph">
-<p>We can see if our application is able to respond to HTTP requests using, e.g., the Postman (Chrome), RESTClient browser plugin (Firefox), Advanced Rest Client (Firefox), or the command line tool called <code>curl</code>.</p>
+<p>It is often helpful to manually test that our HTTP endpoints are working as expected.
+This can be done using command line tools like <code>curl</code> (which is available in Git Bash in a typical Git installation) or GUI tools like Postman or Firefox&#8217;s Advanced REST Client.</p>
 </div>
 <div class="paragraph">
-<p>Once you launch the client, you can specify the path and select the method as shown in the below figures.</p>
+<p>First, start the app using the command <code>./gradlew bootRun</code>.
+Using <code>curl</code>, we can then send a POST request to <code>/people</code> as follows, assuming our app is listening on port 8080.</p>
 </div>
-<div class="imageblock">
+<div class="listingblock">
 <div class="content">
-<img src="figs/RestClient1.png" alt="Post method on REST Client" width="1000">
+<pre class="highlight"><code class="language-bash" data-lang="bash">curl --request POST 'http://localhost:8080/people' --data '{"name": "Alice", "email": "alice.allison@mail.mcgill.ca", "password": "password123"}' --header 'Content-Type: application/json'</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>Once we use POST, the record is persisted and then we can use the GET method to retrive the same.</p>
+<p>We expect a response like this:</p>
 </div>
-<div class="imageblock">
+<div class="listingblock">
 <div class="content">
-<img src="figs/RestClient2.png" alt="GET method on REST Client" width="1000">
+<pre class="highlight"><code>{"id":602,"name":"Alice","email":"alice.allison@mail.mcgill.ca","creationDate":"2024-10-21"}</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>Similary, we can try other methods as well.</p>
+<p>Notice that the ID and creation date are included in the response, but the password is not (since we used a DTO).</p>
+</div>
+<div class="paragraph">
+<p>We can then fetch the newly-created person using the ID returned by the backend.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-bash" data-lang="bash">curl --request GET 'http://localhost:8080/people/602'</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Since we used the same DTO for the responses of both endpoints, we expect the same output.</p>
 </div>
 </div>
 </div>
@@ -2651,7 +2451,7 @@ Note that:</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2024-10-21 15:37:03 -0400
+Last updated 2024-10-21 16:51:46 -0400
 </div>
 </div>
 </body>
