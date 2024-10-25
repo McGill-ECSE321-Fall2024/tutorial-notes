@@ -1749,6 +1749,99 @@ If that method throws an exception, the framework will "roll back" the transacti
 In this example it is perhaps unnecessary because we only perform one insertion, but in methods that perform multiple database operations it is important to use transactions to avoid data corruption.
 See the Spring Boot documentation on <a href="https://docs.spring.io/spring-framework/reference/data-access/transaction/declarative/annotations.html">the <code>@Transactional</code> annotation</a> and <a href="https://docs.spring.io/spring-framework/reference/data-access/transaction.html">transaction management</a> for more details.</p>
 </div>
+<div class="paragraph">
+<p>We can use transactions directly in PostgreSQL using <code>begin transaction</code>, <code>rollback transaction</code>, and <code>commit transaction</code>.
+For example, consider the following scenario.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Note</div>
+</td>
+<td class="content">
+This is not required for the project, but it is good general knowledge if you plan on working with databases in the future.
+</td>
+</tr>
+</table>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code>$ psql -U postgres --dbname event_registration
+Password for user postgres:
+psql (14.13 (Ubuntu 14.13-0ubuntu0.22.04.1))
+Type "help" for help.
+
+event_registration=# select * from person;
+  id  | creation_date |    email_address     | name  |  password
+------+---------------+----------------------+-------+------------
+ 1502 | 2024-10-24    | alice@mail.mcgill.ca | Alice | pass123456
+(1 row)</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>At first, the database contains only one person.
+We begin a transaction, insert a new person, and confirm that the new person is there.
+However, after this, we accidentally wipe the person table.
+We can revert back to the previous state of the database by running <code>rollback transaction</code>.
+After rolling back, Alice is still in the database, but Bob is not.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code>event_registration=# begin transaction;
+BEGIN
+event_registration=*# insert into person values (1, '2024-10-25', 'bob@mail.mcgill.ca', 'Bob', 'pass123');
+INSERT 0 1
+event_registration=*# select * from person;
+  id  | creation_date |    email_address     | name  |  password
+------+---------------+----------------------+-------+------------
+ 1502 | 2024-10-24    | alice@mail.mcgill.ca | Alice | pass123456
+    1 | 2024-10-25    | bob@mail.mcgill.ca   | Bob   | pass123
+(2 rows)
+
+event_registration=*# delete from person;
+DELETE 2
+event_registration=*# rollback transaction;
+ROLLBACK
+event_registration=# select * from person;
+  id  | creation_date |    email_address     | name  |  password
+------+---------------+----------------------+-------+------------
+ 1502 | 2024-10-24    | alice@mail.mcgill.ca | Alice | pass123456
+(1 row)</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>If we instead commit the transaction, the changes take effect as usual.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code>event_registration=# begin transaction;
+BEGIN
+event_registration=*# insert into person values (1, '2024-10-25', 'bob@mail.mcgill.ca', 'Bob', 'pass123');
+INSERT 0 1
+event_registration=*# commit transaction;
+COMMIT
+event_registration=# select * from person;
+  id  | creation_date |    email_address     | name  |  password
+------+---------------+----------------------+-------+------------
+ 1502 | 2024-10-24    | alice@mail.mcgill.ca | Alice | pass123456
+    1 | 2024-10-25    | bob@mail.mcgill.ca   | Bob   | pass123
+(2 rows)</code></pre>
+</div>
+</div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Important</div>
+</td>
+<td class="content">
+If you&#8217;re ever manually working with a database (hopefully only a test database), you should perform updates in a transaction.
+That way you have the option to undo if you make a mistake.
+</td>
+</tr>
+</table>
+</div>
 </div>
 <div class="sect3">
 <h4 id="_exposing_service_functionality_via_a_restful_api">3.6.2. Exposing Service Functionality via a RESTful API</h4>
@@ -2335,7 +2428,7 @@ Note that:</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2024-10-21 17:24:48 -0400
+Last updated 2024-10-25 17:23:19 -0400
 </div>
 </div>
 </body>

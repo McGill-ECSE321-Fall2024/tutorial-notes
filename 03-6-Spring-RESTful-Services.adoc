@@ -54,6 +54,73 @@ If that method throws an exception, the framework will "roll back" the transacti
 In this example it is perhaps unnecessary because we only perform one insertion, but in methods that perform multiple database operations it is important to use transactions to avoid data corruption.
 See the Spring Boot documentation on link:https://docs.spring.io/spring-framework/reference/data-access/transaction/declarative/annotations.html[the `@Transactional` annotation] and link:https://docs.spring.io/spring-framework/reference/data-access/transaction.html[transaction management] for more details.
 
+We can use transactions directly in PostgreSQL using `begin transaction`, `rollback transaction`, and `commit transaction`.
+For example, consider the following scenario.
+
+NOTE: This is not required for the project, but it is good general knowledge if you plan on working with databases in the future.
+
+```
+$ psql -U postgres --dbname event_registration
+Password for user postgres: 
+psql (14.13 (Ubuntu 14.13-0ubuntu0.22.04.1))
+Type "help" for help.
+
+event_registration=# select * from person;
+  id  | creation_date |    email_address     | name  |  password  
+------+---------------+----------------------+-------+------------
+ 1502 | 2024-10-24    | alice@mail.mcgill.ca | Alice | pass123456
+(1 row)
+```
+
+At first, the database contains only one person.
+We begin a transaction, insert a new person, and confirm that the new person is there.
+However, after this, we accidentally wipe the person table.
+We can revert back to the previous state of the database by running `rollback transaction`.
+After rolling back, Alice is still in the database, but Bob is not.
+
+```
+event_registration=# begin transaction;
+BEGIN
+event_registration=*# insert into person values (1, '2024-10-25', 'bob@mail.mcgill.ca', 'Bob', 'pass123');
+INSERT 0 1
+event_registration=*# select * from person;
+  id  | creation_date |    email_address     | name  |  password  
+------+---------------+----------------------+-------+------------
+ 1502 | 2024-10-24    | alice@mail.mcgill.ca | Alice | pass123456
+    1 | 2024-10-25    | bob@mail.mcgill.ca   | Bob   | pass123
+(2 rows)
+
+event_registration=*# delete from person;
+DELETE 2
+event_registration=*# rollback transaction;
+ROLLBACK
+event_registration=# select * from person;
+  id  | creation_date |    email_address     | name  |  password  
+------+---------------+----------------------+-------+------------
+ 1502 | 2024-10-24    | alice@mail.mcgill.ca | Alice | pass123456
+(1 row)
+```
+
+If we instead commit the transaction, the changes take effect as usual.
+
+```
+event_registration=# begin transaction;
+BEGIN
+event_registration=*# insert into person values (1, '2024-10-25', 'bob@mail.mcgill.ca', 'Bob', 'pass123');
+INSERT 0 1
+event_registration=*# commit transaction;
+COMMIT
+event_registration=# select * from person;
+  id  | creation_date |    email_address     | name  |  password  
+------+---------------+----------------------+-------+------------
+ 1502 | 2024-10-24    | alice@mail.mcgill.ca | Alice | pass123456
+    1 | 2024-10-25    | bob@mail.mcgill.ca   | Bob   | pass123
+(2 rows)
+```
+
+IMPORTANT: If you're ever manually working with a database (hopefully only a test database), you should perform updates in a transaction.
+That way you have the option to undo if you make a mistake.
+
 ==== Exposing Service Functionality via a RESTful API
 
 ===== Building a RESTful Web Service Using a Controller and Data Transfer Objects
