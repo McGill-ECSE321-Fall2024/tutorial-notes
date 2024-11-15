@@ -102,10 +102,9 @@ table {
     border-collapse: collapse;
 }
 
-td,
-th {
-    padding: 0.5em;
-    border: 1px solid white;
+td, th {
+	border: 1px solid var(--color-border);
+	padding: 0.25em;
 }
 
 .danger-btn {
@@ -140,14 +139,7 @@ const router = createRouter({
       name: 'home',
       component: HomeView
     },
-    {
-      path: '/about',
-      name: 'about',
-      // route level code-splitting
-      // this generates a separate chunk (About.[hash].js) for this route
-      // which is lazy-loaded when the route is visited.
-      component: () => import('../views/AboutView.vue'),
-    },
+    // etc.
   ],
 })
 

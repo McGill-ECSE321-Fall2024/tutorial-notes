@@ -193,11 +193,3 @@ The solution for the above bullet points (goes to _EventRegistration.vue_):
 
 . See https://github.com/Rijul5/eventregistration3 for the completed solution
 
-==== Further documentation
-* Vue.js guide: https://vuejs.org/v2/guide/
-* Vue.js API: https://vuejs.org/v2/api/
-* Build commands: http://vuejs-templates.github.io/webpack/commands.html
-* Vue.js and Webpack integration: http://vuejs-templates.github.io/webpack/env.html
-* Html-Webpack: https://github.com/jantimon/html-webpack-plugin
-* Vue Router: https://github.com/vuejs/vue-router
-* Vue Router tutorial: https://scotch.io/tutorials/getting-started-with-vue-router

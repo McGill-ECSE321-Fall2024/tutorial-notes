@@ -1,138 +1,139 @@
 === Vue.js Components with Dynamic Content
 
-==== Add data and event handlers
-Next we add event handling and dynamic content to our EventRegistration.vue component.
+Next we add event handling and dynamic content to our events view.
 
-. Create another file **registration.js** in the same folder which will contain
-the Javascript code for the EventRegistration.vue component.
+First, let's make the event list dynamic instead of hard-coding it in the HTML.
+Add the following code in the `<script>` block...
 
-. Create constructor methods:
-+
 [source,javascript]
 ----
-function PersonDto (name) {
-  this.name = name
-  this.events = []
-}
-
-function EventDto (name, date, start, end) {
-  this.name = name
-  this.eventDate = date
-  this.startTime = start
-  this.endTime = end
-}
-----
-
-. Add data variables to the export declaration of the component.
-+
-[source,javascript]
-----
+<script>
 export default {
-  name: 'eventregistration',
-  data () {
+  name: "events",
+  data() {
     return {
-      persons: [],
-      newPerson: '',
-      errorPerson: '',
-      response: []
-    }
-  },
-  //...
-}
-----
-
-. Add an initialization function below the data part.
-+
-[source,javascript]
-----
-created: function () {
-    // Test data
-    const p1 = new PersonDto('John')
-    const p2 = new PersonDto('Jill')
-    // Sample initial content
-    this.persons = [p1, p2]
-  },
-----
-
-. Add event handling method  **createPerson()**:
-+
-[source,javascript]
-----
-methods: {
-    createPerson: function (personName) {
-      // Create a new person and add it to the list of people
-      const p = new PersonDto(personName)
-      this.persons.push(p)
-      // Reset the name field for new people
-      this.newPerson = ''
-    }
+      events: [
+        { type: "IN_PERSON", name: "My in-person event", date: "2024-11-15", startTime: "13:35:00", endTime: "15:25:00", registrationLimit: 1, location: "McGill" },
+        { type: "ONLINE", name: "My online event", date: "2024-11-16", startTime: "12:00:00", endTime: "13:00:00", registrationLimit: 100, location: "Zoom" },
+      ],
+    };
   }
-----
-
-==== Create dynamic data bindings
-
-. Open `EventRegistration.vue` and link the Javascript file as script:
-+
-[source,xml]
-----
-<script src="./registration.js">
+}
 </script>
 ----
 
-. Change the static template content for the person list to dynamic bindings:
-* We iterate along all people in data property `people` and
-dynamically print their name by `{{ person.name }}` (see https://vuejs.org/v2/guide/list.html[list rendering])
-* We print the (currently empty) list of events to which a person is registered to.
-+
-[source,xml]
-----
-<template>
-  <div id="eventregistration">
-    <h2>Persons</h2>
-      <table>
-        <tr v-for="person in persons" :key="person.name">
-            <td>{{ person.name }}</td>
-            <td> 
-              <ul>
-                <li v-for="event in person.events" :key="event.name">
-                  {{event.name}}
-                </li>
-              </ul>
-            </td>
-        </tr>
-    <!-- ... -->
-    </table>
-  </div>
-</template>
-----
+...and replace the hard-coded `<table>` element with the following table:
 
-. Link input field content with data variable `newPerson` and
-button clicks for **Create Person** for event handler method  `createPerson()`.
-+
-[source,xml]
+[source,html]
 ----
 <table>
-  <!-- ... -->
-<tr>
-    <td>
-        <input type="text" v-model="newPerson" placeholder="Person Name">
-    </td>
-    <td>
-        <button v-bind:disabled="!newPerson" @click="createPerson(newPerson)">Create Person</button>
-    </td>
-</tr>
+  <tbody>
+    <tr>
+      <th>Name</th>
+      <th>Date</th>
+      <th>Type</th>
+    </tr>
+    <tr v-for="e in events">
+      <td>{{ e.name }}</td>
+      <td>{{ e.date }}</td>
+      <td>{{ e.type === "IN_PERSON" ? "In person" : "Online" }}</td>
+    </tr>
+  </tbody>
 </table>
 ----
 
-. Bind the error message to the corresponding variable `errorPerson`
-by extending the `<span>` tag with https://vuejs.org/v2/guide/conditional.html[conditional rendering].
-* The error message will only appear if the data property `errorPerson` is not empty.
-* You may wish to further refine error handling in case of empty string content
-for `newPerson`  by adding `&& !newPerson` to the condition.
-+
-[source,xml]
+Vue.js will automatically inject a new `<tr>` element for each entry in the `events` array (defined above in the `<script>` block).
+The "mustache variables" (e.g., `{{ e.name }}`) will be replaced with the value for the event `e` in the current row.
+
+To implement event creation, we define variables to hold the values entered by the user...
+
+[source,javascript]
 ----
-<span v-if="errorPerson" style="color:red">Error: {{errorPerson}} </span>
+export default {
+  // ...
+  data() {
+    return {
+      events: /* ... */,
+      newEventType: "IN_PERSON",
+      newEventName: null,
+      newEventDate: null,
+      newEventStartTime: null,
+      newEventEndTime: null,
+      newEventRegLimit: null,
+      newEventLocation: null
+    };
+  },
+  // ...
+}
 ----
 
-. Run your frontend application and observe that two people are listed.
+...we define methods `createEvent()` and `clearInputs()`...
+
+[source,javascript]
+----
+export default {
+  // ...
+  methods: {
+    createEvent() {
+      const newEvent = {
+        type: this.newEventType,
+        name: this.newEventName,
+        date: this.newEventDate,
+        startTime: this.newEventStartTime,
+        endTime: this.newEventEndTime,
+        registrationLimit: this.newEventRegLimit,
+        location: this.newEventLocation
+      };
+      this.events.push(newEvent);
+    },
+    clearInputs() {
+      this.newEventType = "IN_PERSON";
+      this.newEventName = null;
+      this.newEventDate = null;
+      this.newEventStartTime = null;
+      this.newEventEndTime = null;
+      this.newEventRegLimit = null;
+      this.newEventLocation = null;
+    },
+    isEventValid() {
+      return this.newEventName
+        && this.newEventDate
+        && this.newEventStartTime
+        && this.newEventRegLimit
+        && this.newEventLocation;
+    }
+  }
+}
+----
+
+...and we bind these new variables and methods to the input elements using `v-bind` and `@click`, respectively.
+
+[source,html]
+----
+<div>
+  <select v-model="newEventType">
+    <option value="IN_PERSON">In person</option>
+    <option value="ONLINE">Online</option>
+  </select>
+  <input type="text" placeholder="Name" v-model="newEventName" />
+  <input type="date" placeholder="Date" v-model="newEventDate" />
+  <input type="time" placeholder="Start Time" v-model="newEventStartTime" />
+  <input type="time" placeholder="End Time" v-model="newEventEndTime" />
+  <input type="text" placeholder="Registration Limit" v-model="newEventRegLimit" />
+  <input type="text" placeholder="Location" v-model="newEventLocation" />
+  <button id="create-btn" @click="createEvent" v-bind:disabled="!isEventValid()">Create Event</button>
+  <button class="danger-btn" @click="clearInputs">Clear</button>
+</div>
+----
+
+Whenever the button is clicked, the method specified by the `@click` attribute (in this case, `createEvent` or `clearInputs`) will be called.
+`createEvent` accesses the values entered by the user via `this.newEventName`, `this.newEventDate`, etc.
+It then adds a new event to the array, which will result in the DOM being updated.
+To clear the inputs, `clearInputs` simply updates the variables `this.newEventName`, `this.newEventDate`, etc.
+
+Notice that we also disable the button in case the user has not entered all the required information yet.
+We take advantage of the fact that empty strings, `null`, and `undefined` are all "falsy" values; that is, `isEventValid` will return `false` if any of the values are empty, `null`, or `undefined`.
+
+IMPORTANT: The `v-model` attribute implements *two-way data binding*.
+If our JavaScript code updates one of the variables, the HTML will be updated accordingly.
+Conversely, if the users types something, the value of the corresponding variable will be updated.

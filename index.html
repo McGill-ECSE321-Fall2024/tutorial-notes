@@ -517,8 +517,17 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#_create_a_new_routing_command">4.2.2. Create a new routing command</a></li>
 </ul>
 </li>
+<li><a href="#_vue_js_components_with_dynamic_content">4.3. Vue.js Components with Dynamic Content</a></li>
+<li><a href="#_calling_backend_services">4.4. Calling Backend Services</a>
+<ul class="sectlevel3">
+<li><a href="#_install_additional_dependencies">4.4.1. Install additional dependencies</a></li>
+<li><a href="#_calling_backend_services_in_from_vue_js_components">4.4.2. Calling backend services in from Vue.js components</a></li>
 </ul>
 </li>
+<li><a href="#_further_documentation">4.5. Further documentation</a></li>
+</ul>
+</li>
+<li><a href="#_working_example">5. Working Example</a></li>
 </ul>
 </div>
 </div>
@@ -2704,10 +2713,9 @@ table {
     border-collapse: collapse;
 }
 
-td,
-th {
-    padding: 0.5em;
-    border: 1px solid white;
+td, th {
+	border: 1px solid var(--color-border);
+	padding: 0.25em;
 }
 
 .danger-btn {
@@ -2744,14 +2752,7 @@ const router = createRouter({
       name: 'home',
       component: HomeView
     },
-    {
-      path: '/about',
-      name: 'about',
-      // route level code-splitting
-      // this generates a separate chunk (About.[hash].js) for this route
-      // which is lazy-loaded when the route is visited.
-      component: () =&gt; import('../views/AboutView.vue'),
-    },
+    // etc.
   ],
 })
 
@@ -2763,12 +2764,347 @@ export default router</code></pre>
 </div>
 </div>
 </div>
+<div class="sect2">
+<h3 id="_vue_js_components_with_dynamic_content">4.3. Vue.js Components with Dynamic Content</h3>
+<div class="paragraph">
+<p>Next we add event handling and dynamic content to our events view.</p>
+</div>
+<div class="paragraph">
+<p>First, let&#8217;s make the event list dynamic instead of hard-coding it in the HTML.
+Add the following code in the <code>&lt;script&gt;</code> block&#8230;&#8203;</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-javascript" data-lang="javascript">&lt;script&gt;
+export default {
+  name: "events",
+  data() {
+    return {
+      events: [
+        { type: "IN_PERSON", name: "My in-person event", date: "2024-11-15", startTime: "13:35:00", endTime: "15:25:00", registrationLimit: 1, location: "McGill" },
+        { type: "ONLINE", name: "My online event", date: "2024-11-16", startTime: "12:00:00", endTime: "13:00:00", registrationLimit: 100, location: "Zoom" },
+      ],
+    };
+  }
+}
+&lt;/script&gt;</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>&#8230;&#8203;and replace the hard-coded <code>&lt;table&gt;</code> element with the following table:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-html" data-lang="html">&lt;table&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;th&gt;Name&lt;/th&gt;
+      &lt;th&gt;Date&lt;/th&gt;
+      &lt;th&gt;Type&lt;/th&gt;
+    &lt;/tr&gt;
+    &lt;tr v-for="e in events"&gt;
+      &lt;td&gt;{{ e.name }}&lt;/td&gt;
+      &lt;td&gt;{{ e.date }}&lt;/td&gt;
+      &lt;td&gt;{{ e.type === "IN_PERSON" ? "In person" : "Online" }}&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Vue.js will automatically inject a new <code>&lt;tr&gt;</code> element for each entry in the <code>events</code> array (defined above in the <code>&lt;script&gt;</code> block).
+The "mustache variables" (e.g., <code>{{ e.name }}</code>) will be replaced with the value for the event <code>e</code> in the current row.</p>
+</div>
+<div class="paragraph">
+<p>To implement event creation, we define variables to hold the values entered by the user&#8230;&#8203;</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-javascript" data-lang="javascript">export default {
+  // ...
+  data() {
+    return {
+      events: /* ... */,
+      newEventType: "IN_PERSON",
+      newEventName: null,
+      newEventDate: null,
+      newEventStartTime: null,
+      newEventEndTime: null,
+      newEventRegLimit: null,
+      newEventLocation: null
+    };
+  },
+  // ...
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>&#8230;&#8203;we define methods <code>createEvent()</code> and <code>clearInputs()</code>&#8230;&#8203;</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-javascript" data-lang="javascript">export default {
+  // ...
+  methods: {
+    createEvent() {
+      const newEvent = {
+        type: this.newEventType,
+        name: this.newEventName,
+        date: this.newEventDate,
+        startTime: this.newEventStartTime,
+        endTime: this.newEventEndTime,
+        registrationLimit: this.newEventRegLimit,
+        location: this.newEventLocation
+      };
+      this.events.push(newEvent);
+    },
+    clearInputs() {
+      this.newEventType = "IN_PERSON";
+      this.newEventName = null;
+      this.newEventDate = null;
+      this.newEventStartTime = null;
+      this.newEventEndTime = null;
+      this.newEventRegLimit = null;
+      this.newEventLocation = null;
+    },
+    isEventValid() {
+      return this.newEventName
+        &amp;&amp; this.newEventDate
+        &amp;&amp; this.newEventStartTime
+        &amp;&amp; this.newEventRegLimit
+        &amp;&amp; this.newEventLocation;
+    }
+  }
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>&#8230;&#8203;and we bind these new variables and methods to the input elements using <code>v-bind</code> and <code>@click</code>, respectively.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-html" data-lang="html">&lt;div&gt;
+  &lt;select v-model="newEventType"&gt;
+    &lt;option value="IN_PERSON"&gt;In person&lt;/option&gt;
+    &lt;option value="ONLINE"&gt;Online&lt;/option&gt;
+  &lt;/select&gt;
+  &lt;input type="text" placeholder="Name" v-model="newEventName" /&gt;
+  &lt;input type="date" placeholder="Date" v-model="newEventDate" /&gt;
+  &lt;input type="time" placeholder="Start Time" v-model="newEventStartTime" /&gt;
+  &lt;input type="time" placeholder="End Time" v-model="newEventEndTime" /&gt;
+  &lt;input type="text" placeholder="Registration Limit" v-model="newEventRegLimit" /&gt;
+  &lt;input type="text" placeholder="Location" v-model="newEventLocation" /&gt;
+  &lt;button id="create-btn" @click="createEvent" v-bind:disabled="!isEventValid()"&gt;Create Event&lt;/button&gt;
+  &lt;button class="danger-btn" @click="clearInputs"&gt;Clear&lt;/button&gt;
+&lt;/div&gt;</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Whenever the button is clicked, the method specified by the <code>@click</code> attribute (in this case, <code>createEvent</code> or <code>clearInputs</code>) will be called.
+<code>createEvent</code> accesses the values entered by the user via <code>this.newEventName</code>, <code>this.newEventDate</code>, etc.
+It then adds a new event to the array, which will result in the DOM being updated.
+To clear the inputs, <code>clearInputs</code> simply updates the variables <code>this.newEventName</code>, <code>this.newEventDate</code>, etc.</p>
+</div>
+<div class="paragraph">
+<p>Notice that we also disable the button in case the user has not entered all the required information yet.
+We take advantage of the fact that empty strings, <code>null</code>, and <code>undefined</code> are all "falsy" values; that is, <code>isEventValid</code> will return <code>false</code> if any of the values are empty, <code>null</code>, or <code>undefined</code>.</p>
+</div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Important</div>
+</td>
+<td class="content">
+The <code>v-model</code> attribute implements <strong>two-way data binding</strong>.
+If our JavaScript code updates one of the variables, the HTML will be updated accordingly.
+Conversely, if the users types something, the value of the corresponding variable will be updated.
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_calling_backend_services">4.4. Calling Backend Services</h3>
+<div class="paragraph">
+<p>Next we change our frontend to issue calls to the backend via the Rest API provided by the Java Spring framework.</p>
+</div>
+<div class="sect3">
+<h4 id="_install_additional_dependencies">4.4.1. Install additional dependencies</h4>
+<div class="paragraph">
+<p>Add Axios as a dependency.
+We will use Axios for issuing REST API calls.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-bash" data-lang="bash">npm install axios@1.5</code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_calling_backend_services_in_from_vue_js_components">4.4.2. Calling backend services in from Vue.js components</h4>
+<div class="paragraph">
+<p>In the <code>&lt;script&gt;</code> block of <code>EventsView.vue</code>, create a new Axios client:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-javascript" data-lang="javascript">&lt;script&gt;
+import axios from "axios";
+
+const axiosClient = axios.create({
+	// NOTE: it's baseURL, not baseUrl
+	baseURL: "http://localhost:8080"
+});
+
+export default {
+  // ...
+}
+&lt;/script&gt;</code></pre>
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Note</div>
+</td>
+<td class="content">
+For simplicity we hard-code the backend URL here, but generally you&#8217;d put it in a config file instead.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>To get the list of events when the page loads, we can send an HTTP request in the <code>created()</code> method:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-javascript" data-lang="javascript">&lt;script&gt;
+// ...
+
+export default {
+  // ...
+  async created() {
+    try {
+      const response = await axiosClient.get("/events");
+    } catch (e) {
+      // TODO: Show a message to the user or something
+      console.error(e);
+    }
+  }
+  // ...
+};
+&lt;/script&gt;</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>We mark the <code>created</code> method <code>async</code> and use <code>await</code> when sending the request so that we can use try/catch for exception handling.
+See <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/async_function" class="bare">https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/async_function</a>.</p>
+</div>
+<div class="paragraph">
+<p>To send newly-created events to the backend, we update the <code>createEvent</code> method as follows:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-javascript" data-lang="javascript">&lt;script&gt;
+// ...
+
+export default {
+  // ...
+  methods: {
+    async createEvent() {
+      const newEvent = {
+        type: this.newEventType,
+        name: this.newEventName,
+        date: this.newEventDate,
+        startTime: this.newEventStartTime,
+        endTime: this.newEventEndTime,
+        registrationLimit: this.newEventRegLimit,
+        location: this.newEventLocation
+      };
+      try {
+        const response = await axiosClient.post("/events", newEvent);
+      } catch (e) {
+        // TODO: show a message to the user or something
+        console.error(e);
+      }
+      this.events.push(response.data);
+      this.clearInputs();
+    },
+    // ...
+  }
+};
+&lt;/script&gt;</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>If you run the frontend, you should see that you can now create an event and it&#8217;ll appear in the events list.
+Furthermore, the event will remain in the list if you refresh the page.</p>
+</div>
+<div class="paragraph">
+<p>Note that, at first, you will likely run into CORS (<a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS">Cross-Origin Resource Sharing</a>) errors.
+You must add the <code>@CrossOrigin</code> annotation to your controller classes to allow requests from your frontend.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<div class="title">Note</div>
+</td>
+<td class="content">
+You can also use wildcards in the <code>@CrossOrigin</code> annotation, as in <code>@CrossOrigin(origin = "*")</code>.
+This allows cross-origin requests from *any* domain, which is less secure but possibly more convenient.
+</td>
+</tr>
+</table>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">package ca.mcgill.ecse321.eventregistration.controller;
+
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+@CrossOrigin(origins = "http://localhost:8087")
+public class EventController {
+  // ...
+}</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_further_documentation">4.5. Further documentation</h3>
+<div class="ulist">
+<ul>
+<li>
+<p>MDN web docs for general HTML, CSS, and JavaScript questions: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript" class="bare">https://developer.mozilla.org/en-US/docs/Web/JavaScript</a></p>
+</li>
+<li>
+<p>Vue.js guide: <a href="https://vuejs.org/guide/introduction.html" class="bare">https://vuejs.org/guide/introduction.html</a></p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_working_example">5. Working Example</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>A working version of the app is available at <a href="https://github.com/McGill-ECSE321-Fall2024/tutorial-003/" class="bare">https://github.com/McGill-ECSE321-Fall2024/tutorial-003/</a>.</p>
+</div>
+<div class="paragraph">
+<p>Congratulations on making it until the end of the tutorial notes.
+Good luck on your project and on the final exam!</p>
+</div>
 </div>
 </div>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2024-11-15 13:18:10 -0500
+Last updated 2024-11-15 17:53:31 -0500
 </div>
 </div>
 </body>
