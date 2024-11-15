@@ -1,26 +1,25 @@
 === Calling Backend Services
 
-Next we change our frontend to issue calls to the backend via the Rest API provided
-by the Java Spring framework. Please refer to the section 3.6.2 where we enabled the Cross-Origin Resource Sharing at the controller level using '@CrossOrigin' notation.
+Next we change our frontend to issue calls to the backend via the Rest API provided by the Java Spring framework. Please refer to the section 3.6.2 where we enabled the Cross-Origin Resource Sharing at the controller level using '@CrossOrigin' notation.
+
+==== Install additional dependencies
+
+. Add Axios as a dependency. We will use Axios for issuing REST API calls.
+```bash
+npm install axios@1.5
+```
 
 ==== Calling backend services in from Vue.js components
 We need to modify our frontend to make calls to backend services.
 
 . Open **registration.js** and add the following content to the beginning:
-* Note that instead of hard-wired IP addresses and ports, details are given in
-a configuration file.
 +
 [source,javascript]
 ----
 import axios from 'axios'
-import config from '../../config'
-
-const frontendUrl = 'http://' + config.dev.host + ':' + config.dev.port
-const backendUrl = 'http://' + config.dev.backendHost + ':' + config.dev.backendPort
 
 const AXIOS = axios.create({
-  baseURL: backendUrl,
-  headers: { 'Access-Control-Allow-Origin': frontendUrl }
+  baseURL: "http://localhost:8080"
 })
 ----
 

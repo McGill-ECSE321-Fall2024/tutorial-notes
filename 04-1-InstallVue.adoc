@@ -1,9 +1,7 @@
 === Installation Instructions: Vue.js
 :experimental:
 
-https://vuejs.org/v2/guide/[Vue.js] is a popular web frontend for building
-user interfacs in Javascript, which is considered to be easier to learn compared to https://reactjs.org/[React] and
-https://angular.io/[Angular].
+https://vuejs.org/v2/guide/[Vue.js] is a popular web frontend for building user interfaces in Javascript, which is considered to be easier to learn compared to https://reactjs.org/[React] and https://angular.io/[Angular].
 
 Before installing Vue.js, you will need to install https://nodejs.org/en/download[node.js] and npm (this comes with Node by default).
 
@@ -16,20 +14,10 @@ Before installing Vue.js, you will need to install https://nodejs.org/en/downloa
 [source,bash]
 ----
 $ node -v
-v10.21.0 (or higher)
+v22.11.0
 $ npm -v
-6.14.4 (or higher)
+v10.9.0
 ----
-
-. Install the command line interface (CLI) for Vue: `npm install --global @vue/cli`
-
-. Install the init add-on for vue-cli: `npm install --global @vue/cli-init`
-
-////
-. Optionally, install Bootstrap 4: `sudo npm install bootstrap-vue bootstrap@4.0.0-beta.2` 
-////
-
-==== Generate initial Vue.js project content
 
 . Navigate to your local Git repository of the Event Registration System
 +
@@ -38,109 +26,70 @@ $ npm -v
 $ cd ~/git/eventregistration
 ----
 
-////
-$ mkdir EventRegistration-Frontend
-$ cd EventRegistration-Frontend
-////
+. Generate initial content using the command `npm create vue@latest` (see https://github.com/vuejs/create-vue). For the tutorial code, we use the setup below.
 
-
-. Generate initial content as follows
-* Hit kbd:[Enter] after each line if not indicated otherwise
-* Detailed instructions at https://github.com/vuejs-templates/webpack and https://bootstrap-vue.js.org/docs
 +
-[source,bash]
+[source]
 ----
-$ vue init bootstrap-vue/webpack eventregistration-frontend
-? Project name (EventRegistration-Frontend) eventregistration-frontend
-? Project description (A Vue.js project) A Vue.js frontend for Event Registration App
-? Author (Your Name <your.email@provider.com>)
-? Vue build (Use arrow keys):
-> Runtime + Compiler
-  Runtime-only
-? Install vue-router (Y/n): Y
-? Use ESLint to lint your code (Y/n): n
-? Setup unit tests with Karma + Mocha (Y/n) n
-? Setup e2e tests with Nightwatch (Y/n) n
+$ npm create vue@latest
 
-vue-cli · Generated "eventregistration-frontend".
-----
+> npx
+> create-vue
 
-. Rename the generated directory to match the naming convention applied for the backend project
-+
-```
-mv eventregistration-frontend/ EventRegistration-Frontend
-```
 
-. Now execute the following commands (one after the other)
-+
-[source,bash]
-----
-$ cd EventRegistration-Frontend
-$ npm install
-$ npm run dev
+Vue.js - The Progressive JavaScript Framework
+
+✔ Project name: … EventRegistration-Frontend
+✔ Package name: … eventregistration-frontend
+✔ Add TypeScript? … No
+✔ Add JSX Support? … No
+✔ Add Vue Router for Single Page Application development? … Yes
+✔ Add Pinia for state management? … No
+✔ Add Vitest for Unit Testing? … No
+✔ Add an End-to-End Testing Solution? › No
+✔ Add ESLint for code quality? › No
+
+Scaffolding project in /home/louis-ta/dev/eventregistration/EventRegistration-Frontend...
+
+Done. Now run:
+
+  cd EventRegistration-Frontend
+  npm install
+  npm run dev
 ----
 
-. A sample web page should appear at http://localhost:8080/
+. Now execute those commands one after the other to move into the `EventRegistration-Frontend diectory`, install the dependencies, and start the frontend server.
+
+. The command `npm run dev` should output the URL of the development server (e.g., http://localhost:5173/).
 
 . You can stop this development server by pressing kbd:[Ctrl+C] in the shell
 
-==== Install additional dependencies
-
-. Add Axios as a dependency. We will use Axios for issuing REST API calls.
-```bash
-npm install --save axios@1.5
-```
-
 ==== Setting up your development server
 
-. We change the default port to **8087** (instead of the default 8080) and
-the default IP address by using a configuration file.
-The rationale behind this step is that other Tomcat servers may already listen at
-the default localhost:8080 port which may clash with our development server.
+If you want to change the port for the frontend server (e.g., in case another app is already using it), you can do so in `vite.config.js`.
+Set `server.port` to be the new port number.
 
-. Open **./config/index.js** and add `port: 8087` to `module.exports`
-(both `build` and `dev` part)
-* The development server is set up at localhost, i.e. http://127.0.0.1:8087
-* The production server is set up in accordance with the virtual machines
-* We also store the host IP address and port of the backend server
-in similar environment variables (`backendHost` and `backendPort`).
-+
 [source,js]
 ----
-module.exports = {
-  build: {
-    env: require('./prod.env'),
-    host: '127.0.0.1',
-    port: 8087,
-    backendHost: '127.0.0.1',
-    backendPort: 8080,
-    //...
+export default defineConfig({
+  plugins: [
+    vue(),
+    vueDevTools(),
+  ],
+  resolve: {
+    alias: {
+      '@': fileURLToPath(new URL('./src', import.meta.url))
+    },
   },
-  dev: {
-    env: require('./dev.env'),
-    host: '127.0.0.1',
-    port: 8087,
-    backendHost: '127.0.0.1',
-    backendPort: 8080,
-    //...
+  // Added
+  server: {
+    port: 8087
   }
-}
+})
 ----
 
-
-. Open **./build/dev-server.js**, and change the `uri` assignment as follows. The original line of code can be commented or deleted.
-+
-[source,js]
-----
-//var uri = 'http://localhost:' + port
-var host = config.dev.host
-var uri = 'http://' + host + ':' + port
-----
-
-. Start again your development server by `npm run dev`.
-The same web application should now appear at http://127.0.0.1:8087/
-
-. Stop the development server by pressing kbd:[Ctrl+C].
+If you start your development server again using `npm run dev`, the same web application should now appear at http://localhost:8087/
+Stop the development server by pressing kbd:[Ctrl+C].
 
 ==== Commit your work to Github
 
