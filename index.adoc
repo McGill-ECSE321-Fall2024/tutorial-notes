@@ -26,4 +26,4 @@ include::04-Frontend.adoc[]
 A working version of the app is available at https://github.com/McGill-ECSE321-Fall2024/tutorial-003/.
 
 Congratulations on making it until the end of the tutorial notes.
-Good luck on your project and on the final exam!
+Good luck with your project and on the final exam!
