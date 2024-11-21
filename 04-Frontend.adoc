@@ -12,3 +12,4 @@ include::04-4-CallingBackend.adoc[]
 
 * MDN web docs for general HTML, CSS, and JavaScript questions: https://developer.mozilla.org/en-US/docs/Web/JavaScript
 * Vue.js guide: https://vuejs.org/guide/introduction.html
+* Vue router guide: https://router.vuejs.org/guide/
